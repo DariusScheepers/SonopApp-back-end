@@ -1,0 +1,29 @@
+
+
+        let sql2 = `
+            SELECT * 
+            FROM tblUser 
+            WHERE usrID = '${userID}' AND usrPassword = '${password}'
+        `;
+        let result2 = await db.query(sql2, async(err, results2) =>
+        {        
+            if (err) 
+                throw err;
+            //console.log(results2);
+            console.log("results2 length: " + results2.length);
+            if (await results2.length > 0)
+            {
+                req.session.userId = results2[0].usrID;
+                req.session.user = results2[0];
+                success = true;
+            }
+            else
+            {
+                success = false;
+            }   
+            
+            console.log("return result success: " + success);
+            res.send({success});
+        });
+
+        VALUES('${bod.username}', '${bod.email}', '${bod.password}', '${bod.name}', '${bod.surname}')   
