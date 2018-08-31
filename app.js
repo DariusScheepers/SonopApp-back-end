@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const session = require('express-session'); 
 const bcrypt = require("bcrypt");
 const async = require('async');
+const https = require('https');
+const http = require('http');
 
 // SETUP //////////////////////////////////////////
 const db = mysql.createConnection({
@@ -179,9 +181,7 @@ app.get('/announcements', async(req, res) => {
                 date: humanDate,
                 postedBy: nameSurname
             });
-        } 
-        console.log("-----announcements-----\n" + announcements + "\n---------------------");
-        console.log("a: " + announcements[0].title +  "\nb: "+ announcements[1].title);
+        }
         res.send({announcements});
     });
 });
