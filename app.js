@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 const async = require('async');
 const https = require('https');
 const http = require('http');
+const schedule = require('node-schedule');
 
 // SETUP //////////////////////////////////////////
 const db = mysql.createConnection({
@@ -62,6 +63,13 @@ app.get('/getsomething_template/:id', (req, res) => {
 
 app.post('/login', async(req, res) => {
     let success = false;
+    var JSONRes = {
+        success: success,
+        usrID: 0,
+        verified: false,
+        surname: ""
+    };
+
     let username = req.body.username;
     let password = req.body.password;
     if(typeof username !== "string" || typeof password !== "string" || username == null) {
@@ -83,10 +91,10 @@ app.post('/login', async(req, res) => {
             userID = results0[0].usrID;
         }
         else   
-            return res.send({success});
+            return res.send({JSONRes});
 
         let sql1 = `
-            SELECT usrPassword
+            SELECT usrPassword, usrVerified, usrSurname
             FROM tblUser
             WHERE usrID = ${userID}
         `;
@@ -99,8 +107,14 @@ app.post('/login', async(req, res) => {
                 const hash = await results1[0].usrPassword
                 if (await bcrypt.compare(password, hash)) {
                     success = true;
+                    JSONRes = {
+                        success: success,
+                        usrID: userID,
+                        verified: results1[0].usrVerified,
+                        surname: results1[0].usrSurname
+                    };
                 }
-                res.send({success});
+                res.send({JSONRes});
             };
         });
     });
@@ -109,13 +123,16 @@ app.post('/login', async(req, res) => {
 app.post('/addUser', async(req, res) => {
     
     let success = false;
+    let dumObj = {
+        isHk: boolean = false
+    };
     let username = req.body.username;    
     let sql0 = `
         SELECT usrID
         FROM tblUser
         WHERE usrUsername = '${username}'
     `;
-    let result0 = db.query(sql0, (err0, results0) =>
+    let result0 = db.query(sql0, async(err0, results0) =>
     {
         if (err0)
             throw err0;
@@ -125,21 +142,52 @@ app.post('/addUser', async(req, res) => {
         }
         else
         {
-            req.body.password = bcrypt.hash(req.body.password, 10, function(errb, hash)
+            req.body.password = bcrypt.hash(req.body.password, 10, async(errb, hash) =>
             {
                 if (errb)
                     throw errb;
 
                 req.body.password = hash; 
                 let bod = req.body;
+                if (bod.portfolios != null)
+                    dumObj.isHk = true;
                 let sql1 = `
-                    INSERT INTO tblUser(usrUsername, usrEmailAddress, usrPassword, usrName, usrSurname)
-                    VALUES('${bod.username}', '${bod.email}', '${bod.password}', '${bod.name}', '${bod.surname}')   
+                    INSERT INTO tblUser(usrUsername, usrEmailAddress, usrPassword, usrName, usrSurname, usrVerified, usrIsHK)
+                    VALUES('${bod.username}', '${bod.email}', '${bod.password}', '${bod.name}', '${bod.surname}', false, ${dumObj.isHk})   
                 `;
-                result1 = db.query(sql1, (err1, results1) =>
+                result1 = db.query(sql1, async(err1, results1) =>
                 {
                     if (err1)
                         throw err1;
+                    
+                    result2 = await query(sql0);
+                    let sql2 = `INSERT INTO tblWeekendSignIN (
+                        wsiFridayDinner,
+                        wsiSaturdayBrunch,
+                        wsiSaturdayDinner,
+                        wsiSundayBreakfast,
+                        wsiSundayLunch,
+                        wsiSundayDinner,
+                        tblUser_usrID
+                    ) VALUES (
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        ${result2[0].usrID}
+                    );`
+                    result3 = await query(sql2);
+
+                    if (dumObj.isHK)
+                    {
+                        let slq3 = `
+                            INSERT INTO tblHK(hkaPortfolio, tblUser_usrID)
+                            VALUES('${bod.portfolios}', ${result2[0].usrID})
+                        `;
+                        result4 = await query(sql3);
+                    }
                     success = true;
                     res.send({success});
                 });
@@ -186,6 +234,90 @@ app.get('/announcements', async(req, res) => {
     });
 });
 
+app.post('/weekend', async(req, res) =>
+{
+    let meals = ['Friday Dinner','Saturday Brunch', 'Saturday Dinner', 'Sunday Breakfast', 'Sunday Lunch', 'Sunday Dinner'];
+    let JSONRes = [];
+    let sql0 = `SELECT * FROM tblWeekendSignIn WHERE tblUser_usrID = ${req.body.id}`;
+    result0 = await query(sql0);
+    var index = 0;
+    JSONRes.push({
+        meal: meals[0],
+        status: result0[0].wsiFridayDinner,
+        date: getNextDayOfWeek(5)
+    });
+    JSONRes.push({
+        meal: meals[1],
+        status: result0[0].wsiSaturdayBrunch,
+        date: getNextDayOfWeek(6)
+    });
+    JSONRes.push({
+        meal: meals[2],
+        status: result0[0].wsiSaturdayDinner,
+        date: getNextDayOfWeek(6)
+    });
+    JSONRes.push({
+        meal: meals[3],
+        status: result0[0].wsiSundayBreakfast,
+        date: getNextDayOfWeek(0)
+    });
+    JSONRes.push({
+        meal: meals[4],
+        status: result0[0].wsiSundayLunch,
+        date: getNextDayOfWeek(0)
+    });
+    JSONRes.push({
+        meal: meals[5],
+        status: result0[0].wsiSundayDinner,
+        date: getNextDayOfWeek(0)
+    });
+    res.send({JSONRes});
+});
+
+app.post('/updateWeekend', async(req, res) =>
+{
+    let sql0 = `
+        UPDATE tblWeekendSignIn
+        SET wsiFridayDinner = ${req.body.wsiFridayDinner},
+            wsiSaturdayBrunch = ${req.body.wsiSaturdayBrunch},
+            wsiSaturdayDinner = ${req.body.wsiSaturdayDinner},
+            wsiSundayBreakfast = ${req.body.wsiSundayBreakfast},
+            wsiSundayLunch = ${req.body.wsiSundayLunch},
+            wsiSundayDinner = ${req.body.wsiSundayDinner}
+        WHERE 
+            tblUser_usrID = ${req.body.id}
+    `;
+    result0 = await query(sql0);
+
+    let sql1 = `SELECT * FROM tblWeekendSignIn WHERE tblUser_usrID = ${req.body.id}`;
+    result1 = await query(sql1);
+
+    res.sendStatus(200);
+});
+
+app.post('/addAnnouncement', async(req, res) =>
+{
+    let sql0 = `
+        SELECT hkaID
+        FROM tblHK
+        WHERE tblUser_usrID = ${req.body.id}
+    `;
+    result0 = await query(sql0);
+    let nowDate = new Date();
+    nowDate = nowDate.getTime();
+    let sql1 = `
+        INSERT INTO tblAnnouncement(annTitle, annMessage, annDatePosted, tblHK_hkaID)
+        VALUES('${req.body.title}', '${req.body.message}', ${nowDate}, ${result0[0].hkaID})
+    `;
+    result1 = await query(sql1);
+
+    res.sendStatus(200);
+});
+
+
+
+
+// Helpers ///////////////////////////////////////////////////////////////////
 function query(...args) {
 	return new Promise((resolve, reject) => {
 		db.query(...args, (err, results) => {
@@ -197,3 +329,58 @@ function query(...args) {
 		});
 	});
 }
+
+function getNextDayOfWeek(dayOfWeek) {
+    var date = new Date();
+    var resultDate = new Date();
+    resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
+
+    return resultDate.getDate().toString() + "/" + resultDate.getMonth().toString();
+}
+
+var rule = new schedule.RecurrenceRule();
+rule.dayOfWeek = 1; // 1
+rule.hour = 0;      // 0
+rule.minute = 0;    // 0
+rule.second = 30;   // 30
+
+var imJustHere = schedule.scheduleJob(rule, async() =>
+{
+    let sql0 = `
+        SELECT tblHK_hkaID
+        FROM tblAnnouncement
+    `;
+    result0 = await query(sql0);
+    result0.forEach(async(element) => 
+    {
+        let sql1 = `
+            DELETE FROM tblAnnouncement 
+            WHERE tblHK_hkaID = ${element.tblHK_hkaID}
+        `;
+        result1 = await query(sql1);
+    });
+
+    console.log("Wiped tblAnnouncement at " + new Date());
+
+    let sql2 = `
+        SELECT tblUser_usrID
+        FROM tblWeekendSignIn
+    `;
+    result2 = await query(sql2);
+    result2.forEach(async(element) => 
+    {
+        let sql3 = `
+        UPDATE tblWeekendSignIn
+        SET wsiFridayDinner = 0,
+            wsiSaturdayBrunch = 0,
+            wsiSaturdayDinner = 0,
+            wsiSundayBreakfast = 0,
+            wsiSundayLunch = 0,
+            wsiSundayDinner = 0
+        WHERE 
+            tblUser_usrID = ${element.tblUser_usrID}
+        `;
+        result3 = await query(sql3);
+    });
+    console.log("Reset tblWeekendSignIn at " + new Date());
+});

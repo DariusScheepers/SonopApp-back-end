@@ -5,13 +5,17 @@ INSERT INTO tblUser (
 	usrEmailAddress,
 	usrPassword,
 	usrName,
-	usrSurname
+	usrSurname,
+    usrVerified,
+    usrIsHK
 ) VALUES (
 	"admin",
 	"darius@gmail.com",
 	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
 	"Darius",
-	"Scheepers"
+	"Scheepers",
+    true,
+    true
 );
 
 INSERT INTO tblUser (
@@ -19,13 +23,17 @@ INSERT INTO tblUser (
 	usrEmailAddress,
 	usrPassword,
 	usrName,
-	usrSurname
+	usrSurname,
+    usrVerified,
+    usrIsHK
 ) VALUES (
 	"hasie",
 	"gmail@hasie.com",
 	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
 	"Johan",
-	"Haasbroek"
+	"Haasbroek",
+    false,
+    true
 );
 
 INSERT INTO tblHK (
@@ -34,6 +42,14 @@ INSERT INTO tblHK (
 ) VALUES (
 	"Onder-Voorsitter, IT",
     2
+);
+
+INSERT INTO tblHK (
+	hkaPortfolio,
+    tblUser_usrID
+) VALUES (
+	"Awesome",
+    1
 );
     
 

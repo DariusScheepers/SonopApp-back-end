@@ -5,10 +5,10 @@ INSERT INTO tblAnnouncement (
     tblHK_hkaID
 ) VALUES (
 	'Program van die week',
-    'Program of the week\n
-    Monday\n
-•	12:45 Bediening\n
-•	17:30 Bediening\n 
+    'Program of the week
+    Monday
+•	12:45 Bediening
+•	17:30 Bediening
 •	19:00 First Team Rugby
 •	19:15 u/20s Rugby
 •	19:00 Serenade

@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS `dbSonopApp`.`tblUser` (
   `usrPassword` VARCHAR(60) NOT NULL,
   `usrName` VARCHAR(40) NOT NULL,
   `usrSurname` VARCHAR(40) NOT NULL,
+  `usrVerified` boolean NOT NULL,
+  `usrIsHK` boolean NOT NULL,
   PRIMARY KEY (`usrID`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
@@ -54,7 +56,7 @@ DEFAULT CHARACTER SET = latin1;
 CREATE TABLE IF NOT EXISTS `dbSonopApp`.`tblAnnouncement` (
   `annID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `annTitle` VARCHAR(50) NOT NULL,
-  `annMessage` TEXT NOT NULL,
+  `annMessage` VARCHAR(10000) NOT NULL,
   `annDatePosted` BIGINT NOT NULL,
   `tblHK_hkaID` INT(10) UNSIGNED NOT NULL,
   PRIMARY KEY (`annID`, `tblHK_hkaID`),
@@ -62,6 +64,25 @@ CREATE TABLE IF NOT EXISTS `dbSonopApp`.`tblAnnouncement` (
   CONSTRAINT `fk_tblAnnouncement_tblHK1`
     FOREIGN KEY (`tblHK_hkaID`)
     REFERENCES `dbSonopApp`.`tblHK` (`hkaID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
+CREATE TABLE IF NOT EXISTS `dbSonopApp`.`tblWeekendSignIn` (
+  `wsiID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `wsiFridayDinner` boolean,
+  `wsiSaturdayBrunch` boolean,
+  `wsiSaturdayDinner` boolean,
+  `wsiSundayBreakfast` boolean,
+  `wsiSundayLunch` boolean,
+  `wsiSundayDinner` boolean,
+  `tblUser_usrID` INT(10) UNSIGNED NOT NULL,
+  PRIMARY KEY (`wsiID`, `tblUser_usrID`),
+  INDEX `fk_tblWeekendSignIn_tblUser1_idx` (`tblUser_usrID` ASC),
+  CONSTRAINT `fk_tblWeekendSignIn_tblUser1`
+    FOREIGN KEY (`tblUser_usrID`)
+    REFERENCES `dbSonopApp`.`tblUser` (`usrID`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
