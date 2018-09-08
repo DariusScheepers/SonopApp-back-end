@@ -52,4 +52,42 @@ INSERT INTO tblHK (
     1
 );
     
+USE dbsonopapp;
+INSERT INTO tblUser (
+	usrUsername,
+	usrEmailAddress,
+	usrPassword,
+	usrName,
+	usrSurname,
+    usrVerified,
+    usrIsHK
+) VALUES (
+	"hard",
+	"gmail@hasie.com",
+	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
+	"hardus",
+	"kaksak",
+    false,
+    false
+);
+
+INSERT INTO tblUser (
+	usrUsername,
+	usrEmailAddress,
+	usrPassword,
+	usrName,
+	usrSurname,
+    usrVerified,
+    usrIsHK
+) VALUES (
+	"chala",
+	"chal@hasie.com",
+	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
+	"chal",
+	"ekIsnie",
+    false,
+    true
+);
+
+    
 

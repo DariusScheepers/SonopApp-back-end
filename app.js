@@ -37,7 +37,8 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 60000 }
-}))
+}));
+const nonniePassword = '$2b$10$0tGwUTai3xpPp9kvgUbiA.NwQo6ZqJEVUqk.jU5jUZDEKmqpFOjke';
 
 // EXAMPLES /////////////////////////////////////////////////
 
@@ -314,6 +315,73 @@ app.post('/addAnnouncement', async(req, res) =>
     res.sendStatus(200);
 });
 
+app.post('/nonnie-login', async(req,res) =>
+{   
+    let success = false;
+    let JSONRes = {
+        success: boolean = false
+    };
+
+    var password = req.body.password;
+    if (await bcrypt.compare(password, nonniePassword)) {
+        success = true;
+        JSONRes = {
+            success: success
+        };
+    }
+    res.send({JSONRes});
+
+});
+
+app.get('/getUnverifiedAccounts', async(req, res) =>
+{
+    let sql0 = `
+        SELECT *
+        FROM tblUser
+        WHERE usrVerified = false
+    `;
+
+    let result0 = await query(sql0);
+    res.send({result0});
+});
+
+app.post('/acceptAccount', async(req, res) =>
+{
+    let sql0 = `
+        UPDATE tblUser
+        SET usrVerified = true
+        WHERE usrID = ${req.body.id}
+    `;
+
+    let result0 = await query(sql0);
+    res.sendStatus(200);
+});
+
+app.post('/discardAccount', async(req, res) =>
+{
+    let sql0 = `
+        DELETE FROM tblWeekendSignIn
+        WHERE tblUser_usrID = ${req.body.id}
+    `;
+
+    let result0 = await query(sql0);
+
+    let sql1 = `
+        DELETE FROM tblHK
+        WHERE tblUser_usrID = ${req.body.id}
+    `;
+
+    let result1 = await query(sql1);
+
+    let sql2 = `
+        DELETE FROM tblUser
+        WHERE usrID = ${req.body.id} 
+    `;
+
+    let result2 = await query(sql2);
+
+    res.sendStatus(200);
+});
 
 
 
