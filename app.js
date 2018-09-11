@@ -153,8 +153,26 @@ app.post('/addUser', async(req, res) => {
                 if (bod.portfolios != null)
                     dumObj.isHk = true;
                 let sql1 = `
-                    INSERT INTO tblUser(usrUsername, usrEmailAddress, usrPassword, usrName, usrSurname, usrVerified, usrIsHK)
-                    VALUES('${bod.username}', '${bod.email}', '${bod.password}', '${bod.name}', '${bod.surname}', false, ${dumObj.isHk})   
+                    INSERT INTO tblUser(usrUsername, 
+                        usrEmailAddress, 
+                        usrPassword, 
+                        usrName, 
+                        usrSurname,
+                        usrStudentNumber,
+                        usrFirstYearYear,
+                        tblBedieningTable_talID, 
+                        usrVerified, 
+                        usrIsHK)
+                    VALUES('${bod.username}', 
+                        '${bod.email}', 
+                        '${bod.password}', 
+                        '${bod.name}', 
+                        '${bod.surname}',
+                        '${bod.studentnumber}',
+                        '${bod.firstyearyear}',
+                        '${bod.bedieningtable}', 
+                        false, 
+                        ${dumObj.isHk})   
                 `;
                 result1 = db.query(sql1, async(err1, results1) =>
                 {

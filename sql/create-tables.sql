@@ -21,10 +21,19 @@ CREATE TABLE IF NOT EXISTS `dbSonopApp`.`tblUser` (
   `usrPassword` VARCHAR(60) NOT NULL,
   `usrName` VARCHAR(40) NOT NULL,
   `usrSurname` VARCHAR(40) NOT NULL,
+  `usrStudentNumber` VARCHAR(10) NOT NULL,
+  `usrFirstYearYear` int NOT NULL,
   `usrVerified` boolean NOT NULL,
   `usrIsHK` boolean NOT NULL,
-  PRIMARY KEY (`usrID`))
-ENGINE = InnoDB
+  `tblBedieningTable_talID` INT(10) UNSIGNED NOT NULL,
+  PRIMARY KEY (`usrID`, `tblBedieningTable_talID`),
+  INDEX `fk_tblUser_tblBedieningTable1_idx` (`tblBedieningTable_talID` ASC),
+  CONSTRAINT `fk_tblUser_tblBedieningTables1`
+    FOREIGN KEY (`tblBedieningTable_talID`)
+    REFERENCES `dbSonopApp`.`tblBedieningTable` (`talID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+  ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
 -- -----------------------------------------------------
@@ -87,6 +96,14 @@ CREATE TABLE IF NOT EXISTS `dbSonopApp`.`tblWeekendSignIn` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
+
+CREATE TABLE IF NOT EXISTS `dbSonopApp`.`tblBedieningTable` (
+  `talID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `talName` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`talID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = latin1;
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

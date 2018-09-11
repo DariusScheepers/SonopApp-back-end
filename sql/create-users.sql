@@ -6,16 +6,22 @@ INSERT INTO tblUser (
 	usrPassword,
 	usrName,
 	usrSurname,
+    usrStudentNumber,
+    usrFirstYearYear,
     usrVerified,
-    usrIsHK
+    usrIsHK,
+    tblBedieningTable_talID
 ) VALUES (
 	"admin",
 	"darius@gmail.com",
 	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
 	"Darius",
 	"Scheepers",
+    "16006250",
+    2016,
     true,
-    true
+    true,
+    1
 );
 
 INSERT INTO tblUser (
@@ -24,16 +30,22 @@ INSERT INTO tblUser (
 	usrPassword,
 	usrName,
 	usrSurname,
+    usrStudentNumber,
+    usrFirstYearYear,
     usrVerified,
-    usrIsHK
+    usrIsHK,
+    tblBedieningTable_talID
 ) VALUES (
 	"hasie",
 	"gmail@hasie.com",
 	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
 	"Johan",
 	"Haasbroek",
+    "15002020",
+    2016,
     false,
-    true
+    true,
+    4
 );
 
 INSERT INTO tblHK (
@@ -52,41 +64,28 @@ INSERT INTO tblHK (
     1
 );
     
-USE dbsonopapp;
 INSERT INTO tblUser (
 	usrUsername,
 	usrEmailAddress,
 	usrPassword,
 	usrName,
 	usrSurname,
+    usrStudentNumber,
+    usrFirstYearYear,
     usrVerified,
-    usrIsHK
-) VALUES (
-	"hard",
-	"gmail@hasie.com",
-	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
-	"hardus",
-	"kaksak",
-    false,
-    false
-);
-
-INSERT INTO tblUser (
-	usrUsername,
-	usrEmailAddress,
-	usrPassword,
-	usrName,
-	usrSurname,
-    usrVerified,
-    usrIsHK
+    usrIsHK,
+    tblBedieningTable_talID
 ) VALUES (
 	"chala",
 	"chal@hasie.com",
 	"$2b$10$FQC34vY6SsY.b7OxVnhQFeBmELsir.Ova0dbN39spFwdF4QEFUVQu",
 	"chal",
 	"ekIsnie",
+    "15808500",
+    2016,
     false,
-    true
+    true,
+    3
 );
 
     
