@@ -27,3 +27,173 @@
         });
 
         VALUES('${bod.username}', '${bod.email}', '${bod.password}', '${bod.name}', '${bod.surname}')   
+
+
+        
+app.post('/addUser', async(req, res) => {
+    
+    let success = false;
+    let username = req.body.username;    
+    let sql0 = `
+        SELECT usrID
+        FROM tblUser
+        WHERE usrUsername = '${username}'
+    `;
+    let result0 = await query(sql0);
+    let result0 = db.query(sql0, async(err0, results0) =>
+    {
+        if (err0)
+            throw err0;
+        if (results0.length != 0)
+        {
+            res.send({success});
+        }
+        else
+        {
+            req.body.password = bcrypt.hash(req.body.password, 10, async(errb, hash) =>
+            {
+                if (errb)
+                    throw errb;
+
+                req.body.password = hash; 
+                let sql1 = `
+                    INSERT INTO tblUser(
+                        usrUsername, 
+                        usrEmailAddress, 
+                        usrPassword, 
+                        usrName, 
+                        usrSurname,
+                        usrStudentNumber,
+                        usrFirstYearYear,
+                        usrIsSemi,
+                        tblBedieningTable_talID, 
+                        usrVerified, 
+                        usrIsHK)
+                    VALUES(
+                        '${req.body.username}', 
+                        '${req.body.email}', 
+                        '${req.body.password}', 
+                        '${req.body.name}', 
+                        '${req.body.surname}',
+                        '${req.body.studentnumber}',
+                        ${req.body.firstyearyear},
+                        ${req.body.semi},
+                        ${req.body.bedieningtable}, 
+                        false, 
+                        ${req.body.isHk})   
+                `;
+                result1 = db.query(sql1, async(err1, results1) =>
+                {
+                    if (err1)
+                        throw err1;
+                    
+                    result2 = await query(sql0);
+                    let sql2 = `INSERT INTO tblWeekendSignIN (
+                        wsiFridayDinner,
+                        wsiSaturdayBrunch,
+                        wsiSaturdayDinner,
+                        wsiSundayBreakfast,
+                        wsiSundayLunch,
+                        wsiSundayDinner,
+                        tblUser_usrID
+                    ) VALUES (
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        false,
+                        ${result2[0].usrID}
+                    );`
+                    result3 = await query(sql2);
+
+                    let sql3 = `INSERT INTO tblWeeklySignOut (
+                        wsoMondayLunch,
+                        wsoMondayDinner,
+                        wsoTuesdayLunch,
+                        wsoTuesdayDinner,
+                        wsoWednesdayLunch,
+                        wsoWednesdayDinner,
+                        wsoThursdayLunch,
+                        wsoThursdayDinner,
+                        wsoFridayLunch,
+                        tblUser_usrID
+                    ) VALUES (
+                        2,
+                        2,
+                        2,
+                        2,
+                        2,
+                        2,
+                        2,
+                        2,
+                        2,
+                        ${result2[0].usrID}
+                    )`;
+                    result4 = await query(sql3);
+
+                    success = true;
+                    res.send({success});
+                });
+            });
+        }
+    });
+});
+
+
+
+app.post('/login', async(req, res) => {
+    let success = false;
+    var JSONRes = {
+        success: success,
+        usrID: 0,
+        verified: false,
+        surname: ""
+    };
+
+    let username = req.body.username;
+    let password = req.body.password;
+    let userID = 0;
+    let sql0 = `
+        SELECT usrID
+        FROM tblUser
+        WHERE usrUsername = '${username}'
+    `;
+    let result0 = await db.query(sql0, async(err0, results0) =>
+    {
+        if (err0)
+            throw err0;
+        if (results0.length > 0)
+        {
+            userID = results0[0].usrID;
+        }
+        else   
+            return res.send({JSONRes});
+
+        let sql1 = `
+            SELECT usrPassword, usrVerified, usrSurname, usrIsHK
+            FROM tblUser
+            WHERE usrID = ${userID}
+        `;
+        let result1 = await db.query(sql1, async(err1, results1) =>
+        {
+            if (err1)
+                throw err1;
+            if (await results1.length > 0)
+            {
+                const hash = await results1[0].usrPassword
+                if (await bcrypt.compare(password, hash)) {
+                    success = true;
+                    JSONRes = {
+                        success: success,
+                        usrID: userID,
+                        verified: results1[0].usrVerified,
+                        surname: results1[0].usrSurname,
+                        isHK: results1[0].usrIsHK
+                    };
+                }
+                res.send({JSONRes});
+            };
+        });
+    });
+});
