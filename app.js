@@ -15,8 +15,9 @@ const request = require('request');
 const db = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : 'Ds19970419!',
-    database : 'dbSonopApp'
+    password : 'sonoproot',
+    database : 'dbSonopApp',
+    insecureAuth: true
 });
 app.listen(3000, function(){
     console.log("I'm listening on 3000");
@@ -163,7 +164,7 @@ app.post('/addUser', async(req, res) => {
             results1 = await query(sql1);
 
             result2 = await query(sql0);
-            let sql2 = `INSERT INTO tblWeekendSignIN (
+            let sql2 = `INSERT INTO tblWeekendSignIn (
                 wsiFridayDinner,
                 wsiSaturdayBrunch,
                 wsiSaturdayDinner,
@@ -792,6 +793,7 @@ async function getTodaySignOutList()
         let sql2 = `
             SELECT 
                 tblBedieningTable.talName,
+                tblUser.usrIsSemi,
                 CONCAT(tblUser.usrName, ' ', tblUser.usrSurname) AS fullName,
                 tblWeeklySignOut.${lunchMeal},
                 tblWeeklySignOut.${dinnerMeal}
@@ -802,8 +804,10 @@ async function getTodaySignOutList()
             ORDER BY tblUser.tblBedieningTable_talID ASC
         `;
         let result2 = (await query(sql2))[0];
-
-        signOutList.push([result2.talName, result2.fullName, result2[lunchMeal], result2[dinnerMeal]]);
+        var tableName = result2.talName;
+        if (result2.usrIsSemi)
+            tableName += " (Semi)";
+        signOutList.push([tableName, result2.fullName, result2[lunchMeal], result2[dinnerMeal]]);
     }
 }
 
