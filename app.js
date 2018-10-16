@@ -50,6 +50,7 @@ const wipeAnnouncementsDay = 0;
 const wipeAnnouncementsHour = 17;
 const resetsignOutResetDay = 6;
 const resetsignOutResetHour = 23;
+const bestCoderSurname = "Scheepers";
 
 
 // EXAMPLES /////////////////////////////////////////////////
@@ -108,7 +109,7 @@ app.post('/login', async(req, res) => {
     if (await bcrypt.compare(password, hash)) {
         success = true;
         var isTheBestCoder = false;
-        if (results1[0].usrSurname == "Scheepers")
+        if (results1[0].usrSurname == bestCoderSurname)
             isTheBestCoder = true;
         JSONRes = {
             success: success,
