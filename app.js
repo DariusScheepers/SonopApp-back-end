@@ -15,7 +15,7 @@ const request = require('request');
 const db = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : 'sonoproot',
+    password : 'Ds19970419!', //sonoproot
     database : 'dbSonopApp',
     insecureAuth: true
 });
@@ -46,6 +46,11 @@ app.use(session({
 const nonniePassword = '$2b$10$0tGwUTai3xpPp9kvgUbiA.NwQo6ZqJEVUqk.jU5jUZDEKmqpFOjke';
 const lunchDeadlineHour = 11;
 const dinnerDeadlineHour = 15;
+const wipeAnnouncementsDay = 0;
+const wipeAnnouncementsHour = 17;
+const resetsignOutResetDay = 6;
+const resetsignOutResetHour = 23;
+
 
 // EXAMPLES /////////////////////////////////////////////////
 
@@ -93,7 +98,7 @@ app.post('/login', async(req, res) => {
         return res.send({JSONRes});
 
     let sql1 = `
-        SELECT usrPassword, usrVerified, usrSurname, usrIsHK
+        SELECT usrPassword, usrVerified, usrSurname, usrIsHK, usrSurname
         FROM tblUser
         WHERE usrID = ${userID}
     `;
@@ -102,12 +107,16 @@ app.post('/login', async(req, res) => {
     const hash = results1[0].usrPassword
     if (await bcrypt.compare(password, hash)) {
         success = true;
+        var isTheBestCoder = false;
+        if (results1[0].usrSurname == "Scheepers")
+            isTheBestCoder = true;
         JSONRes = {
             success: success,
             usrID: userID,
             verified: results1[0].usrVerified,
             surname: results1[0].usrSurname,
-            isHK: results1[0].usrIsHK
+            isHK: results1[0].usrIsHK,
+            isTheBestCoder: isTheBestCoder
         };
     }
     res.send({JSONRes});
@@ -401,51 +410,59 @@ app.post('/get-week', async(req, res) =>
     let JSONRes = [];
     let sql0 = `SELECT * FROM tblWeeklySignOut WHERE tblUser_usrID = ${req.body.id}`;
     result0 = await query(sql0);
-    var index = 0;
     JSONRes.push({
         meal: meals[0],
         status: result0[0].wsoMondayLunch,
-        date: getWeeklySignOutDayDate(1,1)
+        date: getWeeklySignOutDayDate(1,1),
+        openStatus: getOpenStatus(1)
     });
     JSONRes.push({
         meal: meals[1],
         status: result0[0].wsoMondayDinner,
-        date: getWeeklySignOutDayDate(2,1) //6
+        date: getWeeklySignOutDayDate(2,1),
+        openStatus: getOpenStatus(2)
     });
     JSONRes.push({
         meal: meals[2],
         status: result0[0].wsoTuesdayLunch,
-        date: getWeeklySignOutDayDate(3,2)
+        date: getWeeklySignOutDayDate(3,2),
+        openStatus: getOpenStatus(3)
     });
     JSONRes.push({
         meal: meals[3],
         status: result0[0].wsoTuesdayDinner,
-        date: getWeeklySignOutDayDate(4,2) //7
+        date: getWeeklySignOutDayDate(4,2),
+        openStatus: getOpenStatus(4)
     });
     JSONRes.push({
         meal: meals[4],
         status: result0[0].wsoWednesdayLunch,
-        date: getWeeklySignOutDayDate(5,3)
+        date: getWeeklySignOutDayDate(5,3),
+        openStatus: getOpenStatus(5)
     });
     JSONRes.push({
         meal: meals[5],
         status: result0[0].wsoWednesdayDinner,
-        date: getWeeklySignOutDayDate(6,3) // 8
+        date: getWeeklySignOutDayDate(6,3),
+        openStatus: getOpenStatus(6)
     });
     JSONRes.push({
         meal: meals[6],
         status: result0[0].wsoThursdayLunch,
-        date: getWeeklySignOutDayDate(7,4)
+        date: getWeeklySignOutDayDate(7,4),
+        openStatus: getOpenStatus(7)
     });
     JSONRes.push({
         meal: meals[7],
         status: result0[0].wsoThursdayDinner,
-        date: getWeeklySignOutDayDate(8,4) //9
+        date: getWeeklySignOutDayDate(8,4),
+        openStatus: getOpenStatus(8)
     });
     JSONRes.push({
         meal: meals[8],
         status: result0[0].wsoFridayLunch,
-        date: getWeeklySignOutDayDate(9,5)
+        date: getWeeklySignOutDayDate(9,5),
+        openStatus: getOpenStatus(9)
     });
     res.send({JSONRes});
 });
@@ -473,14 +490,15 @@ app.post('/updateWeeklySignOut', async(req, res) =>
 
 app.get('/currentSignInList', async(req,res) =>
 {
-    if (!signOutListScheduleExecuted)
-        await getTodaySignOutList();
+
+    await getTodaySignOutList();
+    
     var today = new Date();
     var lunchOpen = true;
     var dinnerOpen = true;
-    if (today.getHours >= 11)
+    if (today.getHours >= lunchDeadlineHour)
         lunchOpen = false;
-    if (today.getHours >= 15)
+    if (today.getHours >= dinnerDeadlineHour)
         dinnerOpen = false;
 
     let JSONRes = {
@@ -490,15 +508,7 @@ app.get('/currentSignInList', async(req,res) =>
         dinnerMeal: dinnerMeal,
         dinnerOpenStatus: dinnerOpen
     };
-    return res.send({JSONRes});
-
-    /*await getCurrentSignOutList();
-    let JSONRes = {
-        seatingMap: currentSignOutList,
-        meal: currentMeal
-    };
     res.send({JSONRes});
-    */
 });
 
 app.post('/getSettings', async(req, res) =>
@@ -514,65 +524,69 @@ app.post('/getSettings', async(req, res) =>
 
 app.post('/updateSettings', async (req, res) =>
 {
+    var sql1;
+    if (req.body.bedieningTableID != 1)
+    {
+        sql1 = `
+            UPDATE tblUser
+            SET 
+                tblBedieningTable_talID = ${req.body.bedieningTableID}, 
+                usrIsHK = false,
+                usrIsSemi = ${req.body.semi}
+            WHERE usrID = ${req.body.id}
+        `;
+    }
+    else
+    {
+        sql1 = `
+            UPDATE tblUser
+            SET 
+                tblBedieningTable_talID = ${req.body.bedieningTableID}, 
+                usrIsHK = true,
+                usrIsSemi = ${req.body.semi}
+            WHERE usrID = ${req.body.id}
+        `;
+    }
+    await query(sql1);
+    return res.sendStatus(200);
+});
+
+app.post('/updatePassword', async (req, res) =>
+{
     let jsonRes = {
         success: false
     };
-    if ((req.body.oldpassword != null && req.body.oldpassword != "")
-        && (req.body.newpassword != null && req.body.newpassword != ""))
-    {
-        let sql0 = `
+    let sql0 = `
         SELECT usrPassword
         FROM tblUser
         WHERE usrID = ${req.body.id}
-        `;    
-        let result0 = await query(sql0);
-        if (await bcrypt.compare(req.body.oldpassword, result0[0].usrPassword)) 
+    `;    
+    let result0 = await query(sql0);
+    if (await bcrypt.compare(req.body.oldpassword, result0[0].usrPassword)) 
+    {
+        await bcrypt.hash(req.body.newpassword, 10, async(errb, hash) =>
         {
-            await bcrypt.hash(req.body.newpassword, 10, async(errb, hash) =>
-            {
-                req.body.newpassword = hash; 
-                let sql = `
-                    UPDATE tblUser
-                    SET usrPassword = '${req.body.newpassword}'
-                    WHERE usrID = ${req.body.id}
-                `;
-                await query(sql);
-                jsonRes.success = true;
+            if (errb)
+                res.send({jsonRes});
 
-                var sql1;
-                if (req.body.bedieningTableID != 1)
-                {
-                    sql1 = `
-                        UPDATE tblUser
-                        SET 
-                            tblBedieningTable_talID = ${req.body.bedieningTableID}, 
-                            usrIsHK = false,
-                            usrIsSemi = ${req.body.semi}
-                        WHERE usrID = ${req.body.id}
-                    `;
-                }
-                else
-                {
-                    sql1 = `
-                        UPDATE tblUser
-                        SET 
-                            tblBedieningTable_talID = ${req.body.bedieningTableID}, 
-                            usrIsHK = true,
-                            usrIsSemi = ${req.body.semi}
-                        WHERE usrID = ${req.body.id}
-                    `;
-                }
-                await query(sql1);
-                return res.send({jsonRes});
-            });
-        }
-        else
-        {
+            req.body.newpassword = hash; 
+            let sql = `
+                UPDATE tblUser
+                SET usrPassword = '${req.body.newpassword}'
+                WHERE usrID = ${req.body.id}
+            `;
+            await query(sql);
+            jsonRes.success = true;
+
             return res.send({jsonRes});
-        }
-    } 
+        });
+    }
+    else
+    {
+        return res.send({jsonRes});
+    }
 });
-
+    
 
 // Helpers //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function query(...args) {
@@ -596,8 +610,8 @@ function getNextDayOfWeek(dayOfWeek) {
 }
 
 var rule = new schedule.RecurrenceRule();
-rule.dayOfWeek = 6; // 1
-rule.hour = 0;      // 0
+rule.dayOfWeek = wipeAnnouncementsDay; 
+rule.hour = wipeAnnouncementsHour;      // 0
 rule.minute = 0;    // 0
 rule.second = 30;   // 30
 schedule.scheduleJob(rule, async() =>
@@ -686,7 +700,8 @@ async function getPeopeleAtTableForWeekend(tableID)
         FROM tblUser
         INNER JOIN tblWeekendSignIn ON tblWeekendSignIn.tblUser_usrID = tblUser.usrID
         INNER JOIN tblBedieningTable ON tblUser.tblBedieningTable_talID = tblBedieningTable.talID
-        WHERE tblUser.usrVerified = true AND tblBedieningTable.talID = ${tableID};
+        WHERE tblUser.usrVerified = true AND tblBedieningTable.talID = ${tableID}
+        ORDER BY tblBedieningTable.talName ASC, fullName ASC
     `;    
     var result = [];
     var data = await query(sql0);
@@ -707,9 +722,8 @@ async function getPeopeleAtTableForWeekend(tableID)
 }
 
 var signOutRule = new schedule.RecurrenceRule();
-signOutRule.dayOfWeek = new schedule.Range(1,5);
-signOutRule.hour = [lunchDeadlineHour, dinnerDeadlineHour];
-var signOutListScheduleExecuted = false;
+signOutRule.dayOfWeek = resetsignOutResetDay;
+signOutRule.hour = resetsignOutResetHour;
 var tblWeeklySignOutColumns = [
     "wsoMondayLunch", 
     "wsoMondayDinner", 
@@ -723,31 +737,23 @@ var tblWeeklySignOutColumns = [
 ];
 schedule.scheduleJob(signOutRule, async()=>
 {
-    /*
-    getCurrentSignOutList();
-    */
-
-    signOutListScheduleExecuted = true;
-    getTodaySignOutList();
-    
-    lunchMeal = tblWeeklySignOutColumns[getMealNumberByTime("lunch")-1];
-    dinnerMeal = tblWeeklySignOutColumns[getMealNumberByTime("dinner")-1];
-
-    var mealNumber = getMealNumber() - 1;
-
     let sql0 = `
-        SELECT usrID
-        FROM tblUser
+        SELECT tblUser_usrID
+        FROM tblWeeklySignOut
     `;
+
     let result0 = await query(sql0);
-    for (let element of result0)
-    {      
-        let sql3 = `
-            UPDATE tblWeeklySignOut
-            SET ${tblWeeklySignOutColumns[mealNumber]} = 2
-            WHERE tblUser_usrID = ${element.usrID} and ${tblWeeklySignOutColumns[mealNumber]} = 1
-        `;
-        await query(sql3);
+
+    for (element of result0)
+    {
+        for (let mealNumber = 0; mealNumber < tblWeeklySignOutColumns.length; mealNumber++) {
+            let sql1 = `
+                UPDATE tblWeeklySignOut
+                SET ${tblWeeklySignOutColumns[mealNumber]} = 2
+                WHERE tblUser_usrID = ${element.usrID} and ${tblWeeklySignOutColumns[mealNumber]} = 1
+            `;
+            await query(sql1);
+        }
     }
 });
 
@@ -758,12 +764,15 @@ async function getTodaySignOutList()
 {
     signOutList = [];
 
-    lunchNumber = getMealNumberByTime("lunch") -1;
-    dinnerNumber = getMealNumberByTime("dinner") -1;
+    lunchNumber = await getMealNumberByTime("lunch") -1;
+    dinnerNumber = await getMealNumberByTime("dinner") -1;
 
     let sql0 = `
-        SELECT usrID
-        FROM tblUser
+        SELECT tblWeeklySignOut.tblUser_usrID
+        FROM tblWeeklySignOut
+        INNER JOIN tblUser ON tblWeeklySignOut.tblUser_usrID = tblUser.usrID
+        INNER JOIN tblBedieningTable ON tblBedieningTable.talID = tblBedieningTable_talID
+        ORDER BY tblBedieningTable.talID, tblUser.usrName ASC
     `;
     let result0 = await query(sql0);
 
@@ -780,10 +789,9 @@ async function getTodaySignOutList()
                 wsoThursdayDinner, 
                 wsoFridayLunch
             FROM tblWeeklySignOut
-            WHERE tblUser_usrID = ${element.usrID}
+            WHERE tblUser_usrID = ${element.tblUser_usrID}
         `;
-        let result1 = await query(sql1);   
-        result1 = result1[0];
+        let result1 = (await query(sql1))[0];
 
         lunchMeal = await Object.keys(result1);
         lunchMeal = lunchMeal[lunchNumber];
@@ -800,8 +808,8 @@ async function getTodaySignOutList()
             FROM tblUser
             INNER JOIN tblBedieningTable ON tblBedieningTable.talID = tblUser.tblBedieningTable_talID
             INNER JOIN tblWeeklySignOut ON tblWeeklySignOut.tblUser_usrID = tblUser.usrID
-            WHERE tblUser.usrID = ${element.usrID}
-            ORDER BY tblUser.tblBedieningTable_talID ASC
+            WHERE tblUser.usrID = ${element.tblUser_usrID}
+            ORDER BY tblUser.tblBedieningTable_talID ASC, fullName DESC
         `;
         let result2 = (await query(sql2))[0];
         var tableName = result2.talName;
@@ -809,6 +817,9 @@ async function getTodaySignOutList()
             tableName += " (Semi)";
         signOutList.push([tableName, result2.fullName, result2[lunchMeal], result2[dinnerMeal]]);
     }
+
+    lunchMeal = await getHumanDayOfDBDay(lunchMeal);
+    dinnerMeal = await getHumanDayOfDBDay(dinnerMeal);
 }
 
 function getMealNumberByTime(time)
@@ -852,29 +863,6 @@ function getWeeklySignOutDayDate(mealPos, dayOfWeek)
     return result;
 }
 
-function getMealNumber()
-{
-    var mealNumber;
-    var today = new Date();
-    var afterLunchDeadline = today.getHours() >= lunchDeadlineHour;
-    var afterDinnerDeadline = today.getHours() >= dinnerDeadlineHour;
-    switch ((today.getDay())) {
-        case 1: mealNumber = !afterLunchDeadline ? 1 : (!afterDinnerDeadline ? 2 : 3);
-            break;
-        case 2: mealNumber = !afterLunchDeadline ? 3 : (!afterDinnerDeadline ? 4 : 5); 
-            break;
-        case 3: mealNumber = !afterLunchDeadline ? 5 : (!afterDinnerDeadline ? 6 : 7); 
-            break;
-        case 4: mealNumber = !afterLunchDeadline ? 7 : (!afterDinnerDeadline ? 8 : 9); 
-            break;
-        case 5: mealNumber = 9;
-            break;
-        default: mealNumber = 1; // it is weekend the moment this loads so return maonday lunch
-            break;
-    }
-    return mealNumber;
-}
-
 function mealAlreadyPassedToday(mealPosition)
 {
     var today = new Date();
@@ -894,4 +882,54 @@ function mealAlreadyPassedToday(mealPosition)
     
         default: return false;
     } 
+}
+
+function getOpenStatus(mealPosition)
+{
+    var today = new Date();
+    var afterLunchDeadline = today.getHours() >= lunchDeadlineHour;
+    var afterDinnerDeadline = today.getHours() >= dinnerDeadlineHour;
+    var todayDay = today.getDay();
+    switch (mealPosition) {
+        case 1: return ((!afterLunchDeadline && todayDay == 1) || todayDay < 1) ? true : false;
+        case 2: return ((!afterDinnerDeadline && todayDay == 1) || todayDay < 1) ? true : false;
+        case 3: return ((!afterLunchDeadline && todayDay == 2) || todayDay < 2) ? true : false;
+        case 4: return ((!afterDinnerDeadline && todayDay == 2) || todayDay < 2) ? true : false;
+        case 5: return ((!afterLunchDeadline && todayDay == 3) || todayDay < 3) ? true : false;
+        case 6: return ((!afterDinnerDeadline && todayDay == 3) || todayDay < 3) ? true : false;
+        case 7: return ((!afterLunchDeadline && todayDay == 4) || todayDay < 4) ? true : false;
+        case 8: return ((!afterDinnerDeadline && todayDay == 4) || todayDay < 4) ? true : false;
+        case 9: return ((!afterLunchDeadline && todayDay == 5) || todayDay < 5) ? true : false;
+    
+        default: return false;
+    } 
+}
+
+function getHumanDayOfDBDay(dbName)
+{
+    var result = "";
+    var firstCap = false;
+    var secondCap = false;
+    for (let index = 0; index < dbName.length; index++) 
+    {
+        if (!firstCap && dbName.charAt(index) == dbName.charAt(index).toUpperCase())
+        {
+            firstCap = true;
+            result += dbName.charAt(index);
+        }
+        else if (firstCap && !secondCap && dbName.charAt(index) != dbName.charAt(index).toUpperCase())
+        {
+            result += dbName.charAt(index);
+        }
+        else if (firstCap && !secondCap && dbName.charAt(index) == dbName.charAt(index).toUpperCase())
+        {
+            secondCap = true;
+            result += " " + dbName.charAt(index);
+        }
+        else if (firstCap && secondCap)
+        {
+            result += dbName.charAt(index);
+        }
+    }
+    return result;
 }

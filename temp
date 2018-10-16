@@ -197,3 +197,30 @@ app.post('/login', async(req, res) => {
         });
     });
 });
+
+
+    /*
+    
+    signOutListScheduleExecuted = true;
+    getTodaySignOutList();
+    
+    lunchMeal = tblWeeklySignOutColumns[getMealNumberByTime("lunch")-1];
+    dinnerMeal = tblWeeklySignOutColumns[getMealNumberByTime("dinner")-1];
+
+    var mealNumber = getMealNumber() - 1;
+
+    let sql0 = `
+        SELECT usrID
+        FROM tblUser
+    `;
+    let result0 = await query(sql0);
+    for (let element of result0)
+    {      
+        let sql3 = `
+            UPDATE tblWeeklySignOut
+            SET ${tblWeeklySignOutColumns[mealNumber]} = 2
+            WHERE tblUser_usrID = ${element.usrID} and ${tblWeeklySignOutColumns[mealNumber]} = 1
+        `;
+        await query(sql3);
+    }
+    */
