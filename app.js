@@ -607,7 +607,7 @@ function getNextDayOfWeek(dayOfWeek) {
     var resultDate = new Date();
     resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
 
-    return resultDate.getDate().toString() + "/" + resultDate.getMonth().toString();
+    return resultDate.getDate().toString() + "/" + (resultDate.getMonth()+1).toString();
 }
 
 var rule = new schedule.RecurrenceRule();
@@ -859,7 +859,7 @@ function getWeeklySignOutDayDate(mealPos, dayOfWeek)
         currentDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
         var resultDate = new Date(currentDate.getTime() + 604800000); // week  = 604800000 miliseconds
 
-        result = resultDate.getDate().toString() + "/" + resultDate.getMonth().toString();
+        result = resultDate.getDate().toString() + "/" + (resultDate.getMonth()+1).toString();
     }
     return result;
 }
