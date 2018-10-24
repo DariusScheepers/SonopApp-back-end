@@ -46,8 +46,8 @@ app.use(session({
 const nonniePassword = '$2b$10$0tGwUTai3xpPp9kvgUbiA.NwQo6ZqJEVUqk.jU5jUZDEKmqpFOjke';
 const lunchDeadlineHour = 11;
 const dinnerDeadlineHour = 15;
-const wipeAnnouncementsDay = 0;
-const wipeAnnouncementsHour = 17;
+const wipeAnnouncementsAndWeekendSignInDay = 0;
+const wipeAnnouncementsAndWeekendSignInHour = 17;
 const resetsignOutResetDay = 6;
 const resetsignOutResetHour = 23;
 const bestCoderSurname = "Scheepers";
@@ -611,14 +611,14 @@ function getNextDayOfWeek(dayOfWeek) {
 }
 
 var rule = new schedule.RecurrenceRule();
-rule.dayOfWeek = wipeAnnouncementsDay; 
-rule.hour = wipeAnnouncementsHour;      // 0
+rule.dayOfWeek = wipeAnnouncementsAndWeekendSignInDay;
+rule.hour = wipeAnnouncementsAndWeekendSignInHour;
 rule.minute = 0;    // 0
 rule.second = 30;   // 30
 schedule.scheduleJob(rule, async() =>
 {
     let sql0 = `
-        SELECT tblUser_usrID
+        SELECT DISTINCT tblUser_usrID
         FROM tblAnnouncement
     `;
     result0 = await query(sql0);
@@ -626,15 +626,15 @@ schedule.scheduleJob(rule, async() =>
     {
         let sql1 = `
             DELETE FROM tblAnnouncement 
-            WHERE tblUser_usrID = ${element.tblHK_hkaID}
+            WHERE tblUser_usrID = ${element.tblUser_usrID}
         `;
-        result1 = await query(sql1);
+        await query(sql1);
     }
 
     console.log("Wiped tblAnnouncement at " + new Date());
 
     let sql2 = `
-        SELECT tblUser_usrID
+        SELECT DISTINCT tblUser_usrID
         FROM tblWeekendSignIn
     `;
     result2 = await query(sql2);
