@@ -745,13 +745,13 @@ schedule.scheduleJob(signOutRule, async()=>
 
     let result0 = await query(sql0);
 
-    for (element of result0)
+    for (let element of result0)
     {
         for (let mealNumber = 0; mealNumber < tblWeeklySignOutColumns.length; mealNumber++) {
             let sql1 = `
                 UPDATE tblWeeklySignOut
                 SET ${tblWeeklySignOutColumns[mealNumber]} = 2
-                WHERE tblUser_usrID = ${element.usrID} and ${tblWeeklySignOutColumns[mealNumber]} = 1
+                WHERE tblUser_usrID = ${element.tblUser_usrID} and ${tblWeeklySignOutColumns[mealNumber]} = 1
             `;
             await query(sql1);
         }
