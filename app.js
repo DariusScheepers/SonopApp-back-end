@@ -12,28 +12,55 @@ const schedule = require('node-schedule');
 const request = require('request');
 
 // SETUP //////////////////////////////////////////
-const db = mysql.createConnection({
+app.listen(3000, function(){
+    console.log("I'm listening on 3000");
+})
+var db = {
     host     : 'localhost',
     user     : 'root',
     password : 'Ds19970419!', //sonoproot
     database : 'dbSonopApp',
     insecureAuth: true
-});
-app.listen(3000, function(){
-    console.log("I'm listening on 3000");
-})
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: false
-})); 
-db.connect((err) => {
+};
+
+var connection;
+
+function handleDisconnect()
+{
+    connection = mysql.createConnection(db);
+
+    connection.connect((err) =>
+    {              
+        if(err) {                                   
+            console.log('error when connecting to db:', err);
+            setTimeout(handleDisconnect, 2000); 
+        }                                     
+    });                                     
+    console.log("MySQL Connected");
+    connection.on('error',(err) =>
+    {
+        console.log('db error', err);
+        if(err.code === 'PROTOCOL_CONNECTION_LOST') {
+            handleDisconnect();                         
+        } else {                                    
+            throw err;                                  
+        }
+    });
+}
+
+handleDisconnect();
+/*db.connect((err) => {
     if (err)
     {
         throw err;
     }
     console.log("MySQL Connected");
-});
+});*/
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended: false
+})); 
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
@@ -592,7 +619,7 @@ app.post('/updatePassword', async (req, res) =>
 // Helpers //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function query(...args) {
 	return new Promise((resolve, reject) => {
-		db.query(...args, (err, results) => {
+		connection.query(...args, (err, results) => {
 			if(err) {
 				reject(err);
 			} else {
