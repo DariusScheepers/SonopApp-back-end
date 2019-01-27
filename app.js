@@ -1,3 +1,12 @@
+// Sonop Raspberry Pi 
+// vnc: pi@10.0.10.225
+//      sonoproot
+
+// for internet on hotspot.sonop.org.za
+// pi
+// sonoproot
+
+// IMPORTS //////////////////////////////////////////
 const express = require('express');
 const app = express();
 const mysql = require('mysql');
@@ -47,15 +56,8 @@ function handleDisconnect()
         }
     });
 }
-
 handleDisconnect();
-/*db.connect((err) => {
-    if (err)
-    {
-        throw err;
-    }
-    console.log("MySQL Connected");
-});*/
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -389,6 +391,28 @@ app.get('/getUnverifiedAccounts', async(req, res) =>
     res.send({result0});
 });
 
+app.get('/getVerifiedAccounts', async(req, res) =>
+{
+    let sql = `
+        SELECT 
+            tblUser.usrID, 
+            tblUser.usrUsername, 
+            tblUser.usrEmailAddress, 
+            CONCAT(tblUser.usrName, ' ', tblUser.usrSurname) AS fullName, 
+            tblUser.usrIsHK,
+            tblBedieningTable.talName,
+            tblUser.usrIsSemi,
+            tblUser.tblBedieningTable_talID
+        FROM tblUser
+        INNER JOIN tblBedieningTable ON tblUser.tblBedieningTable_talID = tblBedieningTable.talID
+        WHERE usrVerified = true
+        ORDER BY tblUser.tblBedieningTable_talID ASC, fullName ASC
+    `;
+
+    let result0 = await query(sql);
+    res.send({result0});
+});
+
 app.post('/acceptAccount', async(req, res) =>
 {
     let sql0 = `
@@ -403,12 +427,24 @@ app.post('/acceptAccount', async(req, res) =>
 
 app.post('/discardAccount', async(req, res) =>
 {
-    let sql1 = `
+    let sql = `
         DELETE FROM tblUser
         WHERE usrID = ${req.body.id} 
     `;
 
-    await query(sql1);
+    await query(sql);
+
+    res.sendStatus(200);
+});
+
+app.post('/deleteAccount', async(req, res) =>
+{
+    let sql = `
+        DELETE FROM tblUser
+        WHERE usrID = ${req.body.id}
+    `;
+
+    await query(sql);
 
     res.sendStatus(200);
 });
@@ -551,6 +587,35 @@ app.post('/getSettings', async(req, res) =>
 });
 
 app.post('/updateSettings', async (req, res) =>
+{
+    var sql1;
+    if (req.body.bedieningTableID != 1)
+    {
+        sql1 = `
+            UPDATE tblUser
+            SET 
+                tblBedieningTable_talID = ${req.body.bedieningTableID}, 
+                usrIsHK = false,
+                usrIsSemi = ${req.body.semi}
+            WHERE usrID = ${req.body.id}
+        `;
+    }
+    else
+    {
+        sql1 = `
+            UPDATE tblUser
+            SET 
+                tblBedieningTable_talID = ${req.body.bedieningTableID}, 
+                usrIsHK = true,
+                usrIsSemi = ${req.body.semi}
+            WHERE usrID = ${req.body.id}
+        `;
+    }
+    await query(sql1);
+    return res.sendStatus(200);
+});
+
+app.post('/updateAccountInformation', async (req, res) =>
 {
     var sql1;
     if (req.body.bedieningTableID != 1)
