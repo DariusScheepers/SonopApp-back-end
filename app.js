@@ -113,13 +113,14 @@ app.post('/login', async(req, res) => {
         surname: ""
     };
 
-    let username = req.body.username;
-    let password = req.body.password;
+    let studentNumber = req.body.studentNumber;
+    // let username = req.body.username;
+    // let password = req.body.password;
     let userID = 0;
     let sql0 = `
         SELECT usrID
         FROM tblUser
-        WHERE usrUsername = '${username}'
+        WHERE usrStudentNumber = '${studentNumber}'
     `;
     let results0 = await query(sql0);
     if (results0.length > 0)
@@ -134,21 +135,19 @@ app.post('/login', async(req, res) => {
     `;
     let results1 = await query(sql1);
 
-    const hash = results1[0].usrPassword
-    if (await bcrypt.compare(password, hash)) {
-        success = true;
-        var isTheBestCoder = false;
-        if (results1[0].usrSurname == bestCoderSurname)
-            isTheBestCoder = true;
-        JSONRes = {
-            success: success,
-            usrID: userID,
-            verified: results1[0].usrVerified,
-            surname: results1[0].usrSurname,
-            isHK: results1[0].usrIsHK,
-            isTheBestCoder: isTheBestCoder
-        };
-    }
+    const hash = results1[0].usrPassword;
+    success = true;
+    var isTheBestCoder = false;
+    if (results1[0].usrSurname == bestCoderSurname)
+        isTheBestCoder = true;
+    JSONRes = {
+        success: success,
+        usrID: userID,
+        verified: results1[0].usrVerified,
+        surname: results1[0].usrSurname,
+        isHK: results1[0].usrIsHK,
+        isTheBestCoder: isTheBestCoder
+    };
     res.send({JSONRes});
 });
 
