@@ -594,7 +594,7 @@ app.get('/currentSignInList', async(req,res) =>
 app.post('/getSettings', async(req, res) =>
 {
     let sql0 = `
-        SELECT tblBedieningTable_talID, usrIsSemi
+        SELECT tblBedieningTable_talID, usrIsSemi, usrEmailAddress
         FROM tblUser
         WHERE usrID = ${req.body.id}
     `;
@@ -612,7 +612,8 @@ app.post('/updateSettings', async (req, res) =>
             SET 
                 tblBedieningTable_talID = ${req.body.bedieningTableID}, 
                 usrIsHK = false,
-                usrIsSemi = ${req.body.semi}
+                usrIsSemi = ${req.body.semi},
+                usrEmailAddress = '${req.body.email}'
             WHERE usrID = ${req.body.id}
         `;
     }
@@ -623,7 +624,8 @@ app.post('/updateSettings', async (req, res) =>
             SET 
                 tblBedieningTable_talID = ${req.body.bedieningTableID}, 
                 usrIsHK = true,
-                usrIsSemi = ${req.body.semi}
+                usrIsSemi = ${req.body.semi},
+                usrEmailAddress = ${req.body.email}
             WHERE usrID = ${req.body.id}
         `;
     }
