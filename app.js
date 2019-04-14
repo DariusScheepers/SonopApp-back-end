@@ -19,6 +19,7 @@ const https = require('https');
 const http = require('http');
 const schedule = require('node-schedule');
 const request = require('request');
+const nodemailer = require('nodemailer');
 
 // SETUP //////////////////////////////////////////
 app.listen(3000, function(){
@@ -80,7 +81,23 @@ const wipeAnnouncementsAndWeekendSignInHour = 17;
 const resetsignOutResetDay = 6;
 const resetsignOutResetHour = 23;
 const bestCoderSurname = "Scheepers";
+const emailNotificationDay = 3; // 3
+const emailNotificationHour = 12; // 12
+const emailNotificationMinute = 0; // 0
+const emailConfig = {
+    "from": "Sonop Pi <sonoppi123@gmail.com>",
+    "transport": {
+        "service": "gmail",
+        "auth": {
+            "user": "sonoppi123@gmail.com",
+            "pass": "sonoproot"
+        }
+    }
+};
+const emailNotificationSubjectLine = `Weekend Sign In Reminder`;
+const emailNotificationMessage = `Please remember to sign in for this weekend. You will make Nonnie very happy.`
 
+const transporter = nodemailer.createTransport(emailConfig.transport);
 
 // EXAMPLES /////////////////////////////////////////////////
 
@@ -848,6 +865,50 @@ schedule.scheduleJob(signOutRule, async()=>
         }
     }
 });
+
+var emailNotificationRule = new schedule.RecurrenceRule();
+emailNotificationRule.dayOfWeek = emailNotificationDay;
+emailNotificationRule.hour = emailNotificationHour;
+emailNotificationRule.minute = emailNotificationMinute;
+schedule.scheduleJob(emailNotificationRule, async() =>
+{
+    sendNotificationEmail();
+});
+async function sendNotificationEmail()
+{
+    let sql0 = `
+        SELECT usrEmailAddress, usrSurname
+        FROM tblUser
+    `;
+    let results0 = await query(sql0);
+    for (let i = 0; i < results0.length; i++) {
+        const element = results0[i];
+        let user = {
+            name: element.usrSurname,
+            email: element.usrEmailAddress
+        };
+        await sendMail(user, emailNotificationSubjectLine, emailNotificationMessage);
+    }
+    console.log(`Notification by email sent to ${results0.length} users`);
+}
+
+async function sendMail(user, subject, message)
+{
+    return new Promise((resolve, reject) => {
+		transporter.sendMail({
+			from: emailConfig.from,
+			to: user.email,
+			subject,
+			text: `Hi ${user.name},\n\n${message}\n\nKind regards,\nSonopApp Team`
+		}, (err) => {
+			if(err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		});
+	});
+}
 
 var lunchMeal;
 var dinnerMeal;
