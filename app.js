@@ -28,7 +28,7 @@ app.listen(3000, function(){
 var db = {
     host     : 'localhost',
     user     : 'root',
-    password : 'Ds19970419!', //sonoproot
+    password : 'sonoproot', //sonoproot
     database : 'dbSonopApp',
     insecureAuth: true
 };
