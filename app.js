@@ -13,7 +13,7 @@ const mysql = require('mysql');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session'); 
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcrypt');
 const async = require('async');
 const https = require('https');
 const http = require('http');
@@ -81,11 +81,11 @@ const wipeAnnouncementsAndWeekendSignInHour = 17;
 const resetsignOutResetDay = 6;
 const resetsignOutResetHour = 23;
 const bestCoderSurname = "Scheepers";
-const emailNotificationDay = 3; // 3
+const emailNotificationDay = [2, 3]; // [1, 3]
 const emailNotificationHour = 12; // 12
 const emailNotificationMinute = 0; // 0
 const emailConfig = {
-    "from": "Sonop Pi <sonoppi123@gmail.com>",
+    "from": "SonopApp <sonoppi123@gmail.com>",
     "transport": {
         "service": "gmail",
         "auth": {
@@ -95,7 +95,9 @@ const emailConfig = {
     }
 };
 const emailNotificationSubjectLine = `Weekend Sign In Reminder`;
-const emailNotificationMessage = `Please remember to sign in for this weekend. You will make Nonnie very happy.`
+const emailNotificationMessage = `Please remember to sign in for this weekend. You will make Nonnie very happy.
+
+http://10.0.5.103:8100/`;
 
 const transporter = nodemailer.createTransport(emailConfig.transport);
 
@@ -901,7 +903,7 @@ async function sendMail(user, subject, message)
 			from: emailConfig.from,
 			to: user.email,
 			subject,
-			text: `Hi ${user.name},\n\n${message}\n\nKind regards,\nSonopApp Team`
+			text: `Hi Mnr. ${user.name},\n\n${message}\n\nKind regards,\nSonopApp Team`
 		}, (err) => {
 			if(err) {
 				reject(err);
