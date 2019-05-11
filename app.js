@@ -28,7 +28,7 @@ app.listen(3000, function(){
 var db = {
     host     : 'localhost',
     user     : 'root',
-    password : 'sonoproot', //sonoproot
+    password : 'Ds19970419!', //sonoproot
     database : 'dbSonopApp',
     insecureAuth: true
 };
@@ -81,7 +81,7 @@ const wipeAnnouncementsAndWeekendSignInHour = 17;
 const resetsignOutResetDay = 6;
 const resetsignOutResetHour = 23;
 const bestCoderSurname = "Scheepers";
-const emailNotificationDay = [2, 3]; // [1, 3]
+const emailNotificationDay = 3; // [1, 3]
 const emailNotificationHour = 12; // 12
 const emailNotificationMinute = 0; // 0
 const emailConfig = {
@@ -97,7 +97,7 @@ const emailConfig = {
 const emailNotificationSubjectLine = `Weekend Sign In Reminder`;
 const emailNotificationMessage = `Please remember to sign in for this weekend. You will make Nonnie very happy.
 
-http://10.0.5.103:8100/`;
+http://10.0.5.103:8100/\n`;
 
 const transporter = nodemailer.createTransport(emailConfig.transport);
 
@@ -302,40 +302,40 @@ app.get('/getAnnouncements', async(req, res) => {
         res.send({announcements});
 });
 
+const weekendMeals = ['Friday Dinner','Saturday Brunch', 'Saturday Dinner', 'Sunday Breakfast', 'Sunday Lunch', 'Sunday Dinner'];
 app.post('/get-weekend', async(req, res) =>
 {
-    let meals = ['Friday Dinner','Saturday Brunch', 'Saturday Dinner', 'Sunday Breakfast', 'Sunday Lunch', 'Sunday Dinner'];
     let JSONRes = [];
     let sql0 = `SELECT * FROM tblWeekendSignIn WHERE tblUser_usrID = ${req.body.id}`;
     result0 = await query(sql0);
     var index = 0;
     JSONRes.push({
-        meal: meals[0],
+        meal: weekendMeals[0],
         status: result0[0].wsiFridayDinner,
         date: getNextDayOfWeek(5)
     });
     JSONRes.push({
-        meal: meals[1],
+        meal: weekendMeals[1],
         status: result0[0].wsiSaturdayBrunch,
         date: getNextDayOfWeek(6)
     });
     JSONRes.push({
-        meal: meals[2],
+        meal: weekendMeals[2],
         status: result0[0].wsiSaturdayDinner,
         date: getNextDayOfWeek(6)
     });
     JSONRes.push({
-        meal: meals[3],
+        meal: weekendMeals[3],
         status: result0[0].wsiSundayBreakfast,
         date: getNextDayOfWeek(0)
     });
     JSONRes.push({
-        meal: meals[4],
+        meal: weekendMeals[4],
         status: result0[0].wsiSundayLunch,
         date: getNextDayOfWeek(0)
     });
     JSONRes.push({
-        meal: meals[5],
+        meal: weekendMeals[5],
         status: result0[0].wsiSundayDinner,
         date: getNextDayOfWeek(0)
     });
@@ -486,62 +486,62 @@ app.get('/bibleVerse', async(req, res) =>
         res.sendStatus(500);
 });
 
+const weekMeals = ['Monday Lunch','Monday Dinner','Tuesday Lunch', 'Tuesday Dinner', 'Wednesday Lunch', 'Wednesday Dinner', 'Thursday Lunch', 'Thursday Dinner', 'Friday Lunch'];
 app.post('/get-week', async(req, res) =>
 {
-    let meals = ['Monday Lunch','Monday Dinner','Tuesday Lunch', 'Tuesday Dinner', 'Wednesday Lunch', 'Wednesday Dinner', 'Thursday Lunch', 'Thursday Dinner', 'Friday Lunch'];
     let JSONRes = [];
     let sql0 = `SELECT * FROM tblWeeklySignOut WHERE tblUser_usrID = ${req.body.id}`;
     result0 = await query(sql0);
     JSONRes.push({
-        meal: meals[0],
+        meal: weekMeals[0],
         status: result0[0].wsoMondayLunch,
         date: getWeeklySignOutDayDate(1,1),
         openStatus: getOpenStatus(1)
     });
     JSONRes.push({
-        meal: meals[1],
+        meal: weekMeals[1],
         status: result0[0].wsoMondayDinner,
         date: getWeeklySignOutDayDate(2,1),
         openStatus: getOpenStatus(2)
     });
     JSONRes.push({
-        meal: meals[2],
+        meal: weekMeals[2],
         status: result0[0].wsoTuesdayLunch,
         date: getWeeklySignOutDayDate(3,2),
         openStatus: getOpenStatus(3)
     });
     JSONRes.push({
-        meal: meals[3],
+        meal: weekMeals[3],
         status: result0[0].wsoTuesdayDinner,
         date: getWeeklySignOutDayDate(4,2),
         openStatus: getOpenStatus(4)
     });
     JSONRes.push({
-        meal: meals[4],
+        meal: weekMeals[4],
         status: result0[0].wsoWednesdayLunch,
         date: getWeeklySignOutDayDate(5,3),
         openStatus: getOpenStatus(5)
     });
     JSONRes.push({
-        meal: meals[5],
+        meal: weekMeals[5],
         status: result0[0].wsoWednesdayDinner,
         date: getWeeklySignOutDayDate(6,3),
         openStatus: getOpenStatus(6)
     });
     JSONRes.push({
-        meal: meals[6],
+        meal: weekMeals[6],
         status: result0[0].wsoThursdayLunch,
         date: getWeeklySignOutDayDate(7,4),
         openStatus: getOpenStatus(7)
     });
     JSONRes.push({
-        meal: meals[7],
+        meal: weekMeals[7],
         status: result0[0].wsoThursdayDinner,
         date: getWeeklySignOutDayDate(8,4),
         openStatus: getOpenStatus(8)
     });
     JSONRes.push({
-        meal: meals[8],
+        meal: weekMeals[8],
         status: result0[0].wsoFridayLunch,
         date: getWeeklySignOutDayDate(9,5),
         openStatus: getOpenStatus(9)
@@ -881,17 +881,21 @@ schedule.scheduleJob(emailNotificationRule, async() =>
 async function sendNotificationEmail()
 {
     let sql0 = `
-        SELECT usrEmailAddress, usrSurname
+        SELECT usrID, usrEmailAddress, usrSurname, usrVerified
         FROM tblUser
     `;
     let results0 = await query(sql0);
     for (let i = 0; i < results0.length; i++) {
         const element = results0[i];
+        if (element.usrVerified === 0) {
+            return;
+        }
         let user = {
             name: element.usrSurname,
             email: element.usrEmailAddress
         };
-        await sendMail(user, emailNotificationSubjectLine, emailNotificationMessage);
+        let message = emailNotificationMessage + '\n' + await getMealsSignedInListForUserMessage(element.usrID);
+        await sendMail(user, emailNotificationSubjectLine, message);
     }
     console.log(`Notification by email sent to ${results0.length} users`);
 }
@@ -912,6 +916,45 @@ async function sendMail(user, subject, message)
 			}
 		});
 	});
+}
+
+async function getMealsSignedInListForUserMessage(usrID)
+{
+    let message = '';
+    const sql0 = `
+        SELECT *
+        FROM tblWeekendSignIn
+        WHERE tblUser_usrID = ${usrID}
+    `;
+
+    const result0 = (await query(sql0))[0];
+    console.log('qqqq', result0);
+    console.log('a: ', result0.wsiFridayDinner)
+    if (result0.wsiFridayDinner === 1) {
+        message = message + `\n    ${weekendMeals[0]}`
+    }
+    if (result0.wsiSaturdayBrunch === 1) {
+        message = message + `\n    ${weekendMeals[1]}`
+    }
+    if (result0.wsiSaturdayDinner === 1) {
+        message = message + `\n    ${weekendMeals[2]}`
+    }
+    if (result0.wsiSundayBreakfast === 1) {
+        message = message + `\n   ${weekendMeals[3]}`
+    }
+    if (result0.wsiSundayLunch === 1) {
+        message = message + `\n    ${weekendMeals[4]}`
+    }
+    if (result0.wsiSundayDinner === 1) {
+        message = message + `\n    ${weekendMeals[5]}`
+    }
+
+    console.log('mm', message, 'ffff', usrID);
+    if (message.length === 0) {
+        return `You haven't signed in yet.`;
+    } else {
+        return `You have signed in for:` + message;
+    }
 }
 
 var lunchMeal;
