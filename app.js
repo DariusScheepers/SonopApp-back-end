@@ -28,7 +28,6 @@ app.listen(3000, function(){
 var db = {
     host     : 'localhost',
     user     : 'root',
-    password : 'sonoproot', //sonoproot
     database : 'dbSonopApp',
     insecureAuth: true
 };
@@ -627,7 +626,7 @@ app.post('/updateSettings', async (req, res) =>
                 tblBedieningTable_talID = ${req.body.bedieningTableID}, 
                 usrIsHK = true,
                 usrIsSemi = ${req.body.semi},
-                usrEmailAddress = ${req.body.email}
+                usrEmailAddress = '${req.body.email}'
             WHERE usrID = ${req.body.id}
         `;
     }
