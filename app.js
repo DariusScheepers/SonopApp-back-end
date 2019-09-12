@@ -97,7 +97,7 @@ const emailConfig = {
 const emailNotificationSubjectLine = `Weekend Sign In Reminder`;
 const emailNotificationMessage = `Please remember to sign in for this weekend. You will make Nonnie very happy.
 
-http://10.0.5.103:8100/\n`;
+http://10.0.3.193:8100/\n`;
 
 const transporter = nodemailer.createTransport(emailConfig.transport);
 
