@@ -900,6 +900,33 @@ async function sendNotificationEmail()
     console.log(`Notification by email sent to ${results0.length} users`);
 }
 
+var emailNotificationRuleTemp = new schedule.RecurrenceRule();
+emailNotificationRuleTemp.hour = 12;
+emailNotificationRuleTemp.minute = 5;
+schedule.scheduleJob(emailNotificationRuleTemp, async() =>
+{
+    sendTemporaryVoteForMyApp();
+});
+async function sendTemporaryVoteForMyApp() {
+    let sql0 = `
+        SELECT usrID, usrEmailAddress, usrSurname, usrVerified
+        FROM tblUser
+    `;
+    let results0 = await query(sql0);
+    for (let i = 0; i < results0.length; i++) {
+        const element = results0[i];
+        if (element.usrVerified === 0) {
+            return;
+        }
+        let user = {
+            name: element.usrSurname,
+            email: element.usrEmailAddress
+        };
+        let message = `Please Vote for your SonopApp to participate in the World Wide Red Bull Basement University competition in Canada! You can vote every 24 hours before Monday.\n\n https://www.redbull.com/za-en/projects/red-bull-basement-university/project/1075?fbclid=IwAR2um75r5M93xMmQc9HUwKgB_WochVwxV-zk00c5oes20KY-vYLmIyoMD50 \n\nThank you for returning a service.`;
+        await sendMail(user, 'Please VOTE for SonopApp', message);
+    }
+}
+
 async function sendMail(user, subject, message)
 {
     return new Promise((resolve, reject) => {
